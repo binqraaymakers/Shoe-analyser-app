@@ -110,7 +110,7 @@ export default function FilterBar({
         <input
           type="range"
           min={100}
-          max={300}
+          max={510}
           step={10}
           value={maxPrice}
           onChange={(e) => onMaxPriceChange(parseInt(e.target.value))}

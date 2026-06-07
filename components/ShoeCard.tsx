@@ -1,7 +1,10 @@
 "use client";
 
+import { useState } from "react";
+import Image from "next/image";
 import { ShoeResult } from "@/lib/engine";
 import { ShoeCategory } from "@/lib/shoes";
+import { shoeImages, brandFallbackColors } from "@/lib/shoeImages";
 
 interface ShoeCardProps {
   shoe: ShoeResult;
@@ -28,49 +31,7 @@ const brandColors: Record<string, string> = {
   Nike: "#FF6B35",
   Adidas: "#4CAF50",
   ASICS: "#2196F3",
-  HOKA: "#FF5722",
-  Brooks: "#9C27B0",
-  "New Balance": "#FF9800",
 };
-
-function ScoreRing({ score }: { score: number }) {
-  const radius = 24;
-  const circ = 2 * Math.PI * radius;
-  const offset = circ - (score / 100) * circ;
-  const color = score >= 75 ? "#22c55e" : score >= 55 ? "#f59e0b" : "#ef4444";
-
-  return (
-    <div style={{ position: "relative", width: 64, height: 64, flexShrink: 0 }}>
-      <svg width={64} height={64} style={{ transform: "rotate(-90deg)" }}>
-        <circle cx={32} cy={32} r={radius} fill="none" stroke="var(--border)" strokeWidth={4} />
-        <circle
-          cx={32}
-          cy={32}
-          r={radius}
-          fill="none"
-          stroke={color}
-          strokeWidth={4}
-          strokeDasharray={circ}
-          strokeDashoffset={offset}
-          strokeLinecap="round"
-          style={{ transition: "stroke-dashoffset 0.6s ease" }}
-        />
-      </svg>
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          flexDirection: "column",
-        }}
-      >
-        <span style={{ fontSize: "14px", fontWeight: 700, color, lineHeight: 1 }}>{score}</span>
-      </div>
-    </div>
-  );
-}
 
 function StatBar({ label, value, max = 10 }: { label: string; value: number; max?: number }) {
   return (
@@ -104,7 +65,110 @@ function StatBar({ label, value, max = 10 }: { label: string; value: number; max
   );
 }
 
+/** Shoe photo overlay shown on hover. Falls back to a branded gradient if URL fails. */
+function ShoeImageOverlay({ shoe }: { shoe: ShoeResult }) {
+  const [imgFailed, setImgFailed] = useState(false);
+  const imageUrl = shoeImages[shoe.id];
+  const [bg1, bg2] = brandFallbackColors[shoe.brand] ?? ["#0a0a0b", "#1a1a1e"];
+  const brandColor = brandColors[shoe.brand] ?? "var(--accent)";
+
+  return (
+    <div
+      style={{
+        position: "absolute",
+        inset: 0,
+        zIndex: 20,
+        borderRadius: "14px",
+        overflow: "hidden",
+        pointerEvents: "none",
+      }}
+    >
+      {/* Dark overlay so text below stays readable */}
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          background: `linear-gradient(160deg, ${bg1} 0%, ${bg2} 100%)`,
+          opacity: 0.92,
+        }}
+      />
+
+      {/* Product image */}
+      {imageUrl && !imgFailed ? (
+        <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <Image
+            src={imageUrl}
+            alt={`${shoe.brand} ${shoe.model}`}
+            fill
+            sizes="400px"
+            style={{ objectFit: "contain", padding: "16px" }}
+            onError={() => setImgFailed(true)}
+            unoptimized
+          />
+        </div>
+      ) : (
+        /* Fallback: brand + model text centred on gradient */
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "8px",
+            padding: "20px",
+          }}
+        >
+          <span style={{ fontSize: "40px" }}>👟</span>
+          <span style={{ fontSize: "11px", color: brandColor, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px" }}>
+            {shoe.brand}
+          </span>
+          <span style={{ fontSize: "15px", fontWeight: 700, color: "var(--text-primary)", textAlign: "center" }}>
+            {shoe.model}
+          </span>
+        </div>
+      )}
+
+      {/* Bottom gradient for readability of the caption strip */}
+      <div
+        style={{
+          position: "absolute",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: "56px",
+          background: "linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 100%)",
+        }}
+      />
+
+      {/* Caption strip */}
+      <div
+        style={{
+          position: "absolute",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          padding: "10px 14px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "flex-end",
+        }}
+      >
+        <div>
+          <div style={{ fontSize: "10px", color: brandColor, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px" }}>
+            {shoe.brand}
+          </div>
+          <div style={{ fontSize: "13px", fontWeight: 700, color: "white" }}>{shoe.model}</div>
+        </div>
+        <div style={{ fontSize: "14px", fontWeight: 800, color: "white" }}>€{shoe.price}</div>
+      </div>
+    </div>
+  );
+}
+
 export default function ShoeCard({ shoe, index, isSelected, onSelect }: ShoeCardProps) {
+  const [hovered, setHovered] = useState(false);
   const delta = shoe.secPerKmDelta;
   const deltaStr = delta > 0 ? `-${delta}s/km` : `+${Math.abs(delta)}s/km`;
   const deltaColor = delta > 0 ? "var(--success)" : "var(--danger)";
@@ -114,6 +178,8 @@ export default function ShoeCard({ shoe, index, isSelected, onSelect }: ShoeCard
   return (
     <div
       onClick={onSelect}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
       className="animate-fade-in-up"
       style={{
         animationDelay: `${index * 40}ms`,
@@ -131,31 +197,10 @@ export default function ShoeCard({ shoe, index, isSelected, onSelect }: ShoeCard
         cursor: "pointer",
         position: "relative",
         overflow: "hidden",
+        minHeight: "160px",
       }}
     >
-      {/* Rank badge */}
-      <div
-        style={{
-          position: "absolute",
-          top: "14px",
-          right: "14px",
-          width: "24px",
-          height: "24px",
-          borderRadius: "50%",
-          background: shoe.rank === 1 ? "var(--gold)" : shoe.rank <= 3 ? "var(--surface-3)" : "var(--surface-2)",
-          border: "1px solid var(--border)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontSize: "11px",
-          fontWeight: 700,
-          color: shoe.rank === 1 ? "#1a1a00" : "var(--text-muted)",
-        }}
-      >
-        {shoe.rank === 1 ? "★" : shoe.rank}
-      </div>
-
-      {/* Best match banner */}
+      {/* Best match top bar */}
       {shoe.isBestMatch && (
         <div
           style={{
@@ -169,125 +214,131 @@ export default function ShoeCard({ shoe, index, isSelected, onSelect }: ShoeCard
         />
       )}
 
-      <div style={{ display: "flex", gap: "14px", alignItems: "flex-start" }}>
-        {/* Score ring */}
-        <ScoreRing score={shoe.normalizedScore} />
+      {/* Hover image overlay — animates in/out */}
+      <div
+        style={{
+          opacity: hovered ? 1 : 0,
+          transition: "opacity 0.25s ease",
+          pointerEvents: hovered ? "auto" : "none",
+        }}
+      >
+        <ShoeImageOverlay shoe={shoe} />
+      </div>
 
-        {/* Main info */}
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "2px", flexWrap: "wrap" }}>
-            <span
-              style={{
-                fontSize: "10px",
-                fontWeight: 600,
-                color: brandColor,
-                textTransform: "uppercase",
-                letterSpacing: "0.5px",
-              }}
-            >
-              {shoe.brand}
-            </span>
+      {/* ── Card content (hidden behind overlay when hovered) ── */}
+      <div style={{ position: "relative", zIndex: 1 }}>
+        {/* Rank badge + badges row */}
+        <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "8px", flexWrap: "wrap", paddingRight: "32px" }}>
+          {/* Rank pill */}
+          <div
+            style={{
+              width: "24px",
+              height: "24px",
+              borderRadius: "50%",
+              background: shoe.rank === 1 ? "var(--gold)" : shoe.rank <= 3 ? "var(--surface-3)" : "var(--surface-2)",
+              border: "1px solid var(--border)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: "11px",
+              fontWeight: 700,
+              color: shoe.rank === 1 ? "#1a1a00" : "var(--text-muted)",
+              flexShrink: 0,
+            }}
+          >
+            {shoe.rank === 1 ? "★" : shoe.rank}
+          </div>
+
+          <span style={{ fontSize: "10px", fontWeight: 600, color: brandColor, textTransform: "uppercase", letterSpacing: "0.5px" }}>
+            {shoe.brand}
+          </span>
+
+          <span
+            style={{
+              fontSize: "9px",
+              background: catColor + "22",
+              color: catColor,
+              border: `1px solid ${catColor}44`,
+              borderRadius: "4px",
+              padding: "1px 5px",
+              fontWeight: 600,
+              textTransform: "uppercase",
+              letterSpacing: "0.3px",
+            }}
+          >
+            {categoryLabels[shoe.category]}
+          </span>
+
+          {shoe.isBestMatch && (
             <span
               style={{
                 fontSize: "9px",
-                background: catColor + "22",
-                color: catColor,
-                border: `1px solid ${catColor}44`,
+                background: "rgba(124,109,250,0.15)",
+                color: "var(--accent)",
+                border: "1px solid rgba(124,109,250,0.3)",
                 borderRadius: "4px",
                 padding: "1px 5px",
                 fontWeight: 600,
-                textTransform: "uppercase",
-                letterSpacing: "0.3px",
               }}
             >
-              {categoryLabels[shoe.category]}
+              Best match
             </span>
-            {shoe.carbonPlate && (
-              <span
-                style={{
-                  fontSize: "9px",
-                  background: "rgba(251,191,36,0.1)",
-                  color: "#fbbf24",
-                  border: "1px solid rgba(251,191,36,0.3)",
-                  borderRadius: "4px",
-                  padding: "1px 5px",
-                  fontWeight: 600,
-                }}
-              >
-                Carbon
-              </span>
-            )}
-            {shoe.isBestMatch && (
-              <span
-                style={{
-                  fontSize: "9px",
-                  background: "rgba(124,109,250,0.15)",
-                  color: "var(--accent)",
-                  border: "1px solid rgba(124,109,250,0.3)",
-                  borderRadius: "4px",
-                  padding: "1px 5px",
-                  fontWeight: 600,
-                }}
-              >
-                Best match
-              </span>
-            )}
-          </div>
+          )}
+        </div>
 
-          <h3
+        {/* Model name */}
+        <h3
+          style={{
+            fontSize: "15px",
+            fontWeight: 700,
+            color: "var(--text-primary)",
+            margin: "0 0 10px",
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+          }}
+        >
+          {shoe.model}
+        </h3>
+
+        {/* Stat bars */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "5px", marginBottom: "12px" }}>
+          <StatBar label="Rebound" value={shoe.rebound} />
+          <StatBar label="Demping" value={shoe.cushioning} />
+          <StatBar label="Stabiliteit" value={shoe.stability} />
+        </div>
+
+        {/* Footer */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "6px" }}>
+          <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+            <span style={{ fontSize: "14px", fontWeight: 700, color: "var(--text-primary)" }}>
+              €{shoe.price}
+            </span>
+            <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>{shoe.weight}g</span>
+          </div>
+          <div
             style={{
-              fontSize: "15px",
+              fontSize: "12px",
               fontWeight: 700,
-              color: "var(--text-primary)",
-              margin: "0 0 8px",
-              whiteSpace: "nowrap",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              paddingRight: "32px",
+              color: deltaColor,
+              background: delta > 0 ? "rgba(34,197,94,0.1)" : "rgba(239,68,68,0.1)",
+              border: `1px solid ${delta > 0 ? "rgba(34,197,94,0.2)" : "rgba(239,68,68,0.2)"}`,
+              borderRadius: "6px",
+              padding: "2px 8px",
             }}
           >
-            {shoe.model}
-          </h3>
-
-          {/* Stats bars */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "5px", marginBottom: "10px" }}>
-            <StatBar label="Rebound" value={shoe.rebound} />
-            <StatBar label="Demping" value={shoe.cushioning} />
-            <StatBar label="Stabiliteit" value={shoe.stability} />
-          </div>
-
-          {/* Footer row */}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "6px" }}>
-            <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-              <span style={{ fontSize: "14px", fontWeight: 700, color: "var(--text-primary)" }}>
-                €{shoe.price}
-              </span>
-              <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>
-                {shoe.weight}g
-              </span>
-            </div>
-            <div
-              style={{
-                fontSize: "12px",
-                fontWeight: 700,
-                color: deltaColor,
-                background: delta > 0 ? "rgba(34,197,94,0.1)" : "rgba(239,68,68,0.1)",
-                border: `1px solid ${delta > 0 ? "rgba(34,197,94,0.2)" : "rgba(239,68,68,0.2)"}`,
-                borderRadius: "6px",
-                padding: "2px 8px",
-              }}
-            >
-              {deltaStr}
-            </div>
+            {deltaStr}
           </div>
         </div>
       </div>
 
-      {/* Expandable explanation */}
-      {isSelected && (
+      {/* Expandable explanation (only when selected, overlay is closed) */}
+      {isSelected && !hovered && (
         <div
           className="animate-fade-in"
           style={{
+            position: "relative",
+            zIndex: 1,
             marginTop: "14px",
             paddingTop: "14px",
             borderTop: "1px solid var(--border)",
