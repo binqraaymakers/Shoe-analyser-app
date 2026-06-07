@@ -1,0 +1,1226 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GROEIVAST — Finance &amp; Groei Consultancy Antwerpen</title>
+  <meta name="description" content="Finance en groei consultancy voor KMO's in Antwerpen. Wij vertellen je waar je geld verliest.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+
+  <style>
+    /* ─── Custom Properties ─────────────────────────────────── */
+    :root {
+      --bg-primary:    #0a0a0a;
+      --bg-secondary:  #111111;
+      --bg-tertiary:   #161616;
+      --bg-card:       #1a1a1a;
+
+      --text-primary:  #f5f5f5;
+      --text-secondary:#a0a0a0;
+      --text-muted:    #555555;
+
+      --accent:        #c9a84c;
+      --accent-dim:    rgba(201,168,76,0.12);
+      --accent-border: rgba(201,168,76,0.25);
+
+      --border:        rgba(255,255,255,0.06);
+      --border-hover:  rgba(255,255,255,0.12);
+
+      --light-bg:      #f9f8f6;
+      --light-txt:     #1a1a1a;
+      --light-sub:     #6b6b6b;
+      --light-border:  #e8e5e0;
+
+      --ease: cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* ─── Reset & Base ──────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; font-size: 16px; }
+
+    body {
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: 'Inter', sans-serif;
+      font-weight: 300;
+      line-height: 1.8;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    a { text-decoration: none; color: inherit; }
+
+    /* ─── Scrollbar ─────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 3px; }
+    ::-webkit-scrollbar-track { background: var(--bg-primary); }
+    ::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 2px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+    /* ─── Noise Texture ─────────────────────────────────────── */
+    #noise {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 9999;
+      opacity: 0.025;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n' x='0' y='0'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-size: 200px 200px;
+    }
+
+    /* ─── Cursor Spotlight ──────────────────────────────────── */
+    #spotlight {
+      position: fixed;
+      top: 0; left: 0;
+      width: 700px; height: 700px;
+      pointer-events: none;
+      z-index: 1;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      background: radial-gradient(circle at center, rgba(255,255,255,0.022) 0%, transparent 65%);
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+
+    /* ─── Scroll Reveal ─────────────────────────────────────── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(40px);
+      transition: opacity 0.8s var(--ease), transform 0.8s var(--ease);
+    }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+    .d1 { transition-delay: 0.08s; }
+    .d2 { transition-delay: 0.16s; }
+    .d3 { transition-delay: 0.24s; }
+    .d4 { transition-delay: 0.32s; }
+    .d5 { transition-delay: 0.40s; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .reveal { opacity: 1; transform: none; transition: none; }
+    }
+
+    /* ─── Navigation ────────────────────────────────────────── */
+    #nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      height: 72px;
+      padding: 0 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: background 0.5s var(--ease), backdrop-filter 0.5s ease;
+    }
+    #nav.scrolled {
+      background: rgba(10,10,10,0.88);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+    }
+
+    .nav-logo {
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      color: var(--text-primary);
+      font-weight: 400;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 40px;
+      list-style: none;
+    }
+    .nav-links a {
+      font-size: 12px;
+      letter-spacing: 0.4px;
+      color: var(--text-secondary);
+      transition: color 0.2s ease;
+    }
+    .nav-links a:hover { color: var(--text-primary); }
+
+    .nav-cta {
+      font-size: 12px;
+      letter-spacing: 0.4px;
+      color: var(--text-primary);
+      border: 1px solid var(--border-hover);
+      padding: 9px 20px;
+      transition: background 0.25s ease, color 0.25s ease;
+    }
+    .nav-cta:hover { background: var(--text-primary); color: var(--bg-primary); }
+
+    .nav-burger {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      cursor: pointer;
+    }
+    .nav-burger span {
+      display: block;
+      width: 22px;
+      height: 1px;
+      background: var(--text-primary);
+      transition: all 0.3s ease;
+    }
+
+    #mobile-menu {
+      display: none;
+      position: fixed;
+      top: 72px; left: 0; right: 0;
+      background: rgba(8,8,8,0.97);
+      backdrop-filter: blur(24px);
+      padding: 40px 56px;
+      flex-direction: column;
+      gap: 28px;
+      z-index: 99;
+    }
+    #mobile-menu.open { display: flex; }
+    #mobile-menu a {
+      font-size: 15px;
+      color: var(--text-secondary);
+      letter-spacing: 0.4px;
+      transition: color 0.2s ease;
+    }
+    #mobile-menu a:hover { color: var(--text-primary); }
+
+    /* ─── Hero ──────────────────────────────────────────────── */
+    #hero {
+      position: relative;
+      min-height: 100svh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 140px 48px 100px;
+      background: var(--bg-primary);
+      text-align: center;
+      overflow: hidden;
+    }
+
+    .hero-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 3.5px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 52px;
+    }
+
+    .hero-h1 {
+      font-family: 'Instrument Serif', serif;
+      font-size: clamp(52px, 7.5vw, 88px);
+      font-weight: 400;
+      letter-spacing: -3px;
+      line-height: 1.08;
+      color: var(--text-primary);
+      max-width: 860px;
+      margin-bottom: 36px;
+    }
+
+    .hero-h1 .line2 {
+      display: block;
+      position: relative;
+    }
+    .hero-h1 .line2 .ul {
+      position: relative;
+      display: inline-block;
+    }
+    .hero-h1 .line2 .ul::after {
+      content: '';
+      position: absolute;
+      bottom: 4px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: var(--accent);
+      transition: width 1.4s var(--ease) 1s;
+    }
+    .hero-h1 .line2 .ul.go::after { width: 100%; }
+
+    .hero-sub {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-size: 18px;
+      font-weight: 300;
+      color: var(--text-secondary);
+      margin-bottom: 60px;
+      min-height: 32px;
+    }
+    .tw-word {
+      font-family: 'Instrument Serif', serif;
+      font-style: italic;
+      font-size: 20px;
+      color: var(--accent);
+      min-width: 4px;
+    }
+    .tw-cursor {
+      color: var(--accent);
+      animation: blink 1s step-end infinite;
+      margin-left: 1px;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+    .hero-actions {
+      display: flex;
+      align-items: center;
+      gap: 36px;
+      margin-bottom: 100px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .btn-border {
+      font-size: 13px;
+      letter-spacing: 0.6px;
+      color: var(--text-primary);
+      border: 1px solid rgba(255,255,255,0.25);
+      padding: 14px 30px;
+      transition: background 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .btn-border:hover { background: var(--text-primary); color: var(--bg-primary); border-color: var(--text-primary); }
+
+    .btn-text {
+      font-size: 13px;
+      letter-spacing: 0.3px;
+      color: var(--text-muted);
+      transition: color 0.25s ease;
+    }
+    .btn-text:hover { color: var(--text-secondary); }
+
+    .hero-stats {
+      display: flex;
+      gap: 88px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .hero-stat { text-align: center; }
+    .stat-num {
+      font-family: 'Instrument Serif', serif;
+      font-size: clamp(32px, 4vw, 44px);
+      font-weight: 400;
+      color: var(--text-primary);
+      line-height: 1;
+      margin-bottom: 10px;
+    }
+    .stat-lbl {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    /* ─── Marquee ───────────────────────────────────────────── */
+    .marquee-wrap {
+      overflow: hidden;
+      background: var(--bg-secondary);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 0;
+    }
+    .marquee-track {
+      display: flex;
+      white-space: nowrap;
+      animation: marquee 36s linear infinite;
+    }
+    .marquee-inner {
+      display: inline-flex;
+      flex-shrink: 0;
+    }
+    .marquee-str {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      padding-right: 80px;
+      white-space: nowrap;
+    }
+    @keyframes marquee { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+
+    /* ─── Shared Section Layout ─────────────────────────────── */
+    .section-wrap { max-width: 1160px; margin: 0 auto; }
+
+    .lbl-dark {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 24px;
+    }
+    .lbl-light {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--light-sub);
+      margin-bottom: 24px;
+    }
+
+    .ttl-dark {
+      font-family: 'Instrument Serif', serif;
+      font-size: clamp(36px, 4.5vw, 52px);
+      font-weight: 400;
+      letter-spacing: -2px;
+      line-height: 1.12;
+      color: var(--text-primary);
+      margin-bottom: 72px;
+      max-width: 680px;
+    }
+    .ttl-light {
+      font-family: 'Instrument Serif', serif;
+      font-size: clamp(36px, 4.5vw, 52px);
+      font-weight: 400;
+      letter-spacing: -2px;
+      line-height: 1.12;
+      color: var(--light-txt);
+      margin-bottom: 72px;
+      max-width: 680px;
+    }
+
+    /* ─── Problem Section ───────────────────────────────────── */
+    #probleem {
+      background: var(--light-bg);
+      padding: 128px 56px;
+    }
+    .prob-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 88px;
+      align-items: start;
+    }
+    .prob-lede {
+      font-family: 'Instrument Serif', serif;
+      font-style: italic;
+      font-size: 20px;
+      color: var(--light-txt);
+      line-height: 1.72;
+    }
+    .prob-points { display: flex; flex-direction: column; gap: 40px; }
+    .prob-point { display: flex; gap: 20px; align-items: flex-start; }
+    .pnum {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 1px;
+      color: var(--light-sub);
+      flex-shrink: 0;
+      padding-top: 4px;
+    }
+    .ptxt h3 {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--light-txt);
+      margin-bottom: 5px;
+      letter-spacing: -0.2px;
+    }
+    .ptxt p { font-size: 13.5px; color: var(--light-sub); line-height: 1.75; }
+
+    /* ─── Services Section ──────────────────────────────────── */
+    #diensten {
+      background: var(--bg-secondary);
+      padding: 128px 56px;
+    }
+    .svc-table { display: flex; flex-direction: column; }
+    .svc-row {
+      display: grid;
+      grid-template-columns: 200px 1fr 150px;
+      gap: 40px;
+      align-items: center;
+      padding: 32px 0;
+      border-bottom: 1px solid var(--border);
+      position: relative;
+      transition: background 0.3s ease;
+      cursor: default;
+    }
+    .svc-row::before {
+      content: '';
+      position: absolute;
+      left: -56px;
+      top: 0; bottom: 0;
+      width: 2px;
+      background: var(--accent);
+      transform: scaleY(0);
+      transform-origin: center;
+      transition: transform 0.35s var(--ease);
+    }
+    .svc-row:hover { background: rgba(255,255,255,0.018); }
+    .svc-row:hover::before { transform: scaleY(1); }
+
+    .svc-name {
+      font-size: 15px;
+      font-weight: 400;
+      color: var(--text-primary);
+      letter-spacing: -0.2px;
+    }
+    .svc-desc { font-size: 13.5px; color: var(--text-secondary); line-height: 1.72; }
+    .svc-price {
+      font-family: 'DM Mono', monospace;
+      font-size: 13px;
+      color: var(--text-primary);
+      text-align: right;
+      white-space: nowrap;
+      letter-spacing: 0.3px;
+    }
+    .svc-quote {
+      margin-top: 64px;
+      font-family: 'Instrument Serif', serif;
+      font-style: italic;
+      font-size: 22px;
+      color: var(--text-secondary);
+      line-height: 1.55;
+      max-width: 680px;
+    }
+
+    /* ─── Approach Section ──────────────────────────────────── */
+    #aanpak {
+      background: var(--light-bg);
+      padding: 128px 56px;
+    }
+    .timeline {
+      position: relative;
+      padding-left: 52px;
+    }
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 8px;
+      top: 20px; bottom: 20px;
+      width: 1px;
+      background: var(--light-border);
+    }
+    .tl-item {
+      position: relative;
+      padding: 28px 0;
+    }
+    .tl-dot {
+      position: absolute;
+      left: -52px;
+      top: 32px;
+      width: 18px; height: 18px;
+      border: 1.5px solid var(--light-border);
+      border-radius: 50%;
+      background: var(--light-bg);
+      transition: border-color 0.5s ease, background 0.5s ease;
+    }
+    .tl-dot.on { border-color: var(--light-txt); background: var(--light-txt); }
+    .tl-step {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 2px;
+      color: var(--light-sub);
+      margin-bottom: 8px;
+    }
+    .tl-title {
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--light-txt);
+      margin-bottom: 6px;
+      letter-spacing: -0.2px;
+    }
+    .tl-desc { font-size: 13.5px; color: var(--light-sub); line-height: 1.72; max-width: 520px; }
+
+    /* ─── Cases Section ─────────────────────────────────────── */
+    #resultaten {
+      background: var(--bg-tertiary);
+      padding: 128px 56px;
+    }
+    .cases-list { display: flex; flex-direction: column; }
+    .case-item {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 80px;
+      align-items: center;
+      padding: 72px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .case-item:last-child { border-bottom: none; }
+    .case-sector {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+    }
+    .case-num {
+      font-family: 'Instrument Serif', serif;
+      font-size: clamp(64px, 8vw, 92px);
+      font-weight: 400;
+      letter-spacing: -3px;
+      line-height: 1;
+      color: var(--text-primary);
+      margin-bottom: 16px;
+    }
+    .case-desc { font-size: 14px; color: var(--text-secondary); line-height: 1.72; max-width: 380px; }
+    .case-ctx {
+      font-family: 'Instrument Serif', serif;
+      font-style: italic;
+      font-size: 19px;
+      color: var(--text-secondary);
+      line-height: 1.65;
+    }
+
+    /* ─── Team Section ──────────────────────────────────────── */
+    #team {
+      background: var(--light-bg);
+      padding: 128px 56px;
+    }
+    .team-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 72px;
+      margin-bottom: 80px;
+    }
+    .team-photo {
+      width: 100%;
+      max-width: 260px;
+      aspect-ratio: 3/4;
+      background: #d4d1cc;
+      margin-bottom: 28px;
+    }
+    .team-name {
+      font-size: 17px;
+      font-weight: 500;
+      color: var(--light-txt);
+      margin-bottom: 4px;
+      letter-spacing: -0.2px;
+    }
+    .team-role {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      color: var(--light-sub);
+      margin-bottom: 18px;
+    }
+    .team-bio { font-size: 14px; color: var(--light-sub); line-height: 1.8; margin-bottom: 14px; }
+    .team-exp { font-family: 'DM Mono', monospace; font-size: 11.5px; color: var(--light-sub); letter-spacing: 0.2px; line-height: 1.6; }
+
+    .team-closing {
+      font-family: 'Instrument Serif', serif;
+      font-style: italic;
+      font-size: 22px;
+      color: var(--light-txt);
+      line-height: 1.55;
+      padding-top: 48px;
+      border-top: 1px solid var(--light-border);
+      max-width: 880px;
+    }
+
+    /* ─── CTA Section ───────────────────────────────────────── */
+    #contact {
+      background: var(--bg-primary);
+      min-height: 80vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 128px 56px;
+      text-align: center;
+    }
+    .cta-inner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .cta-ttl {
+      font-family: 'Instrument Serif', serif;
+      font-size: clamp(40px, 6.5vw, 68px);
+      font-weight: 400;
+      letter-spacing: -2px;
+      line-height: 1.12;
+      color: var(--text-primary);
+      margin-bottom: 24px;
+      max-width: 800px;
+    }
+    .cta-sub {
+      font-size: 15px;
+      color: var(--text-secondary);
+      margin-bottom: 52px;
+      letter-spacing: 0.1px;
+    }
+    .cta-btn {
+      font-size: 13px;
+      letter-spacing: 0.6px;
+      color: var(--text-primary);
+      border: 1px solid rgba(255,255,255,0.25);
+      padding: 16px 38px;
+      margin-bottom: 32px;
+      transition: background 0.25s ease, color 0.25s ease;
+      cursor: pointer;
+    }
+    .cta-btn:hover { background: var(--text-primary); color: var(--bg-primary); }
+    .cta-mail {
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      transition: color 0.25s ease;
+    }
+    .cta-mail:hover { color: var(--text-secondary); }
+
+    /* ─── Footer ────────────────────────────────────────────── */
+    footer {
+      background: var(--bg-primary);
+      border-top: 1px solid var(--border);
+      padding: 32px 56px;
+    }
+    .foot-inner {
+      max-width: 1160px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+    .foot-logo {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 3.5px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+    .foot-tag { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
+    .foot-links {
+      display: flex;
+      gap: 28px;
+      flex-wrap: wrap;
+    }
+    .foot-links a {
+      font-size: 11px;
+      letter-spacing: 0.3px;
+      color: var(--text-muted);
+      transition: color 0.2s ease;
+    }
+    .foot-links a:hover { color: var(--text-secondary); }
+    .foot-copy {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+    }
+
+    /* ─── Section dividers ──────────────────────────────────── */
+    .div-dark-light {
+      height: 72px;
+      background: linear-gradient(to bottom, var(--bg-secondary), var(--light-bg));
+    }
+    .div-light-dark {
+      height: 72px;
+      background: linear-gradient(to bottom, var(--light-bg), var(--bg-secondary));
+    }
+    .div-dark-darker {
+      height: 72px;
+      background: linear-gradient(to bottom, var(--bg-secondary), var(--bg-tertiary));
+    }
+    .div-darker-light {
+      height: 72px;
+      background: linear-gradient(to bottom, var(--bg-tertiary), var(--light-bg));
+    }
+    .div-light-darkest {
+      height: 72px;
+      background: linear-gradient(to bottom, var(--light-bg), var(--bg-primary));
+    }
+
+    /* ─── Responsive ────────────────────────────────────────── */
+    @media (max-width: 768px) {
+      #nav { padding: 0 24px; }
+      .nav-links, .nav-cta { display: none; }
+      .nav-burger { display: flex; }
+      #mobile-menu { padding: 40px 24px; }
+
+      #hero { padding: 110px 24px 80px; }
+      .hero-h1 { font-size: 44px; letter-spacing: -2px; }
+      .hero-stats { gap: 48px; }
+      .hero-actions { flex-direction: column; gap: 20px; }
+
+      .marquee-str { font-size: 10px; }
+
+      #probleem,#diensten,#aanpak,#resultaten,#team,#contact {
+        padding: 88px 24px;
+      }
+      .prob-grid { grid-template-columns: 1fr; gap: 52px; }
+      .svc-row { grid-template-columns: 1fr; gap: 10px; }
+      .svc-price { text-align: left; }
+      .svc-row::before { display: none; }
+      .case-item { grid-template-columns: 1fr; gap: 32px; padding: 52px 0; }
+      .team-grid { grid-template-columns: 1fr; gap: 56px; }
+      .team-photo { max-width: 220px; }
+      .foot-inner { flex-direction: column; align-items: flex-start; gap: 20px; }
+      .foot-links { gap: 20px; }
+
+      .timeline { padding-left: 40px; }
+      .tl-dot { left: -40px; }
+
+      .div-dark-light,.div-light-dark,.div-dark-darker,.div-darker-light,.div-light-darkest {
+        height: 40px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Noise -->
+  <div id="noise"></div>
+
+  <!-- Cursor spotlight -->
+  <div id="spotlight"></div>
+
+  <!-- ── Navigation ─────────────────────────────────────────── -->
+  <nav id="nav">
+    <a href="#hero" class="nav-logo">GROEIVAST</a>
+    <ul class="nav-links">
+      <li><a href="#probleem">Probleem</a></li>
+      <li><a href="#diensten">Diensten</a></li>
+      <li><a href="#aanpak">Aanpak</a></li>
+      <li><a href="#resultaten">Resultaten</a></li>
+      <li><a href="#team">Team</a></li>
+    </ul>
+    <a href="#contact" class="nav-cta">Kennismaking</a>
+    <div class="nav-burger" id="burger" role="button" tabindex="0" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </div>
+  </nav>
+
+  <!-- Mobile menu -->
+  <div id="mobile-menu">
+    <a href="#probleem">Probleem</a>
+    <a href="#diensten">Diensten</a>
+    <a href="#aanpak">Aanpak</a>
+    <a href="#resultaten">Resultaten</a>
+    <a href="#team">Team</a>
+    <a href="#contact">Kennismaking</a>
+  </div>
+
+  <!-- ── Hero ───────────────────────────────────────────────── -->
+  <section id="hero">
+
+    <p class="hero-label reveal">Finance &amp; Groei Consultancy — Antwerpen</p>
+
+    <h1 class="hero-h1 reveal d1">
+      Wij vertellen je
+      <span class="line2"><span class="ul" id="ul">waar je geld verliest.</span></span>
+    </h1>
+
+    <p class="hero-sub reveal d2">
+      <span>Wij helpen </span>
+      <span class="tw-word" id="tw"></span><span class="tw-cursor">|</span>
+    </p>
+
+    <div class="hero-actions reveal d3">
+      <a href="#contact" class="btn-border">Gratis kennismaking</a>
+      <a href="#aanpak" class="btn-text">Bekijk onze aanpak &rarr;</a>
+    </div>
+
+    <div class="hero-stats">
+      <div class="hero-stat reveal d3">
+        <div class="stat-num">&euro;0</div>
+        <div class="stat-lbl">Kennismaking</div>
+      </div>
+      <div class="hero-stat reveal d4">
+        <div class="stat-num">48u</div>
+        <div class="stat-lbl">Eerste inzichten</div>
+      </div>
+      <div class="hero-stat reveal d5">
+        <div class="stat-num cnt" data-to="3" data-dur="1200">0</div>
+        <div class="stat-lbl">Lopende cases</div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ── Marquee ────────────────────────────────────────────── -->
+  <div class="marquee-wrap">
+    <div class="marquee-track">
+      <div class="marquee-inner">
+        <span class="marquee-str">FINANCIËLE ANALYSE &middot; KPI DASHBOARDS &middot; GROEI STRATEGIE &middot; KOSTENOPTIMALISATIE &middot; HORECA &middot; E-COMMERCE &middot; MEDISCHE SECTOR &middot; STARTUPS &middot; KMO'S &middot; CASHFLOW &middot; WEBSHOPS &middot; BENCHMARKING &middot; </span>
+        <span class="marquee-str">FINANCIËLE ANALYSE &middot; KPI DASHBOARDS &middot; GROEI STRATEGIE &middot; KOSTENOPTIMALISATIE &middot; HORECA &middot; E-COMMERCE &middot; MEDISCHE SECTOR &middot; STARTUPS &middot; KMO'S &middot; CASHFLOW &middot; WEBSHOPS &middot; BENCHMARKING &middot; </span>
+        <span class="marquee-str">FINANCIËLE ANALYSE &middot; KPI DASHBOARDS &middot; GROEI STRATEGIE &middot; KOSTENOPTIMALISATIE &middot; HORECA &middot; E-COMMERCE &middot; MEDISCHE SECTOR &middot; STARTUPS &middot; KMO'S &middot; CASHFLOW &middot; WEBSHOPS &middot; BENCHMARKING &middot; </span>
+        <span class="marquee-str">FINANCIËLE ANALYSE &middot; KPI DASHBOARDS &middot; GROEI STRATEGIE &middot; KOSTENOPTIMALISATIE &middot; HORECA &middot; E-COMMERCE &middot; MEDISCHE SECTOR &middot; STARTUPS &middot; KMO'S &middot; CASHFLOW &middot; WEBSHOPS &middot; BENCHMARKING &middot; </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Probleem ───────────────────────────────────────────── -->
+  <section id="probleem">
+    <div class="section-wrap">
+
+      <p class="lbl-light reveal">HET PROBLEEM</p>
+      <h2 class="ttl-light reveal d1">Kleine bedrijven hebben de data. Zelden het inzicht.</h2>
+
+      <div class="prob-grid">
+        <p class="prob-lede reveal d2">
+          Boekhouders kijken achteruit. Marketeers vooruit. Maar niemand staat stil bij het volledige plaatje &mdash; de plek waar financiën en groei elkaar raken. Daar gaat het geld verloren. En daar beginnen wij.
+        </p>
+
+        <div class="prob-points">
+          <div class="prob-point reveal d2">
+            <span class="pnum">01 &middot;</span>
+            <div class="ptxt">
+              <h3>Data maar geen inzicht</h3>
+              <p>Boekhouding en kassasystemen genereren cijfers. Maar niemand vertaalt die naar beslissingen.</p>
+            </div>
+          </div>
+          <div class="prob-point reveal d3">
+            <span class="pnum">02 &middot;</span>
+            <div class="ptxt">
+              <h3>Onzichtbare winstlekken</h3>
+              <p>Gemiddeld 12&ndash;18% van de potentiële winst verdwijnt in kosten, prijszetting en marketingverspilling.</p>
+            </div>
+          </div>
+          <div class="prob-point reveal d4">
+            <span class="pnum">03 &middot;</span>
+            <div class="ptxt">
+              <h3>Finance en groei staan apart</h3>
+              <p>Boekhouder kijkt achteruit. Marketeer vooruit. Niemand bewaakt het volledige plaatje.</p>
+            </div>
+          </div>
+          <div class="prob-point reveal d5">
+            <span class="pnum">04 &middot;</span>
+            <div class="ptxt">
+              <h3>Te duur of te vaag</h3>
+              <p>Grote bureaus zijn onbetaalbaar. Freelancers pakken maar één helft aan. Wij doen beide.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <div class="div-light-dark"></div>
+
+  <!-- ── Diensten ───────────────────────────────────────────── -->
+  <section id="diensten">
+    <div class="section-wrap">
+
+      <p class="lbl-dark reveal">WAT WE DOEN</p>
+      <h2 class="ttl-dark reveal d1">Drie diensten. Één doel.</h2>
+
+      <div class="svc-table reveal d2">
+        <div class="svc-row">
+          <div class="svc-name">Bedrijfsaudit</div>
+          <div class="svc-desc">Complete doorlichting van financiën én groei. Inclusief KPI dashboard en gepersonaliseerde presentatie van de bevindingen.</div>
+          <div class="svc-price">vanaf &euro;750</div>
+        </div>
+        <div class="svc-row">
+          <div class="svc-name">Maandelijkse opvolging</div>
+          <div class="svc-desc">KPI-rapport, cashflow monitoring en strategische call elke maand. Geen langetermijncontract.</div>
+          <div class="svc-price">&euro;450 /mnd</div>
+        </div>
+        <div class="svc-row">
+          <div class="svc-name">KPI Dashboard</div>
+          <div class="svc-desc">Looker Studio dashboard op maat. Financiële en groeimetrics automatisch bijgewerkt.</div>
+          <div class="svc-price">&euro;500</div>
+        </div>
+      </div>
+
+      <p class="svc-quote reveal d3">
+        &ldquo;Een groot bureau vraagt &euro;8.000 voor een audit. Wij starten aan &euro;750.&rdquo;
+      </p>
+
+    </div>
+  </section>
+
+  <div class="div-dark-light"></div>
+
+  <!-- ── Aanpak ─────────────────────────────────────────────── -->
+  <section id="aanpak">
+    <div class="section-wrap">
+
+      <p class="lbl-light reveal">HOE HET WERKT</p>
+      <h2 class="ttl-light reveal d1">Vijf stappen naar inzicht.</h2>
+
+      <div class="timeline">
+
+        <div class="tl-item reveal">
+          <div class="tl-dot" data-dot></div>
+          <div class="tl-step">01</div>
+          <div class="tl-title">Gratis kennismaking &mdash; 30 minuten</div>
+          <div class="tl-desc">We luisteren. Geen pitch, geen verplichtingen.</div>
+        </div>
+
+        <div class="tl-item reveal d1">
+          <div class="tl-dot" data-dot></div>
+          <div class="tl-step">02</div>
+          <div class="tl-title">Data verzamelen</div>
+          <div class="tl-desc">Kassaexport, jaarrekening, GA4-toegang. Altijd met geheimhoudingsverklaring.</div>
+        </div>
+
+        <div class="tl-item reveal d2">
+          <div class="tl-dot" data-dot></div>
+          <div class="tl-step">03</div>
+          <div class="tl-title">Analyse</div>
+          <div class="tl-desc">Financiën én groei doorgelicht. Benchmarks per sector.</div>
+        </div>
+
+        <div class="tl-item reveal d3">
+          <div class="tl-dot" data-dot></div>
+          <div class="tl-step">04</div>
+          <div class="tl-title">Rapport &amp; presentatie</div>
+          <div class="tl-desc">Bevindingen in euro's. Prioriteitenplan. Persoonlijk gepresenteerd.</div>
+        </div>
+
+        <div class="tl-item reveal d4">
+          <div class="tl-dot" data-dot></div>
+          <div class="tl-step">05</div>
+          <div class="tl-title">Maandelijkse opvolging (optioneel)</div>
+          <div class="tl-desc">Maandelijks opzegbaar. Geen kleine lettertjes.</div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <div class="div-darker-light" style="background:linear-gradient(to bottom,var(--light-bg),var(--bg-tertiary))"></div>
+
+  <!-- ── Resultaten ─────────────────────────────────────────── -->
+  <section id="resultaten">
+    <div class="section-wrap">
+
+      <p class="lbl-dark reveal">RESULTATEN</p>
+      <h2 class="ttl-dark reveal d1">Wat het oplevert.</h2>
+
+      <div class="cases-list">
+
+        <div class="case-item reveal d2">
+          <div>
+            <p class="case-sector">Horeca &mdash; Restaurant Antwerpen</p>
+            <div class="case-num cnt" data-to="28000" data-prefix="&euro;" data-dur="2200">0</div>
+            <p class="case-desc">Geïdentificeerd besparing- en groeipotentieel op jaarbasis na één audit van twee weken.</p>
+          </div>
+          <p class="case-ctx">Menuoptimalisatie, inkoopherstructurering en bezettingsgraad-analyse brachten het potentieel in kaart.</p>
+        </div>
+
+        <div class="case-item reveal d3">
+          <div>
+            <p class="case-sector">Medisch-esthetisch &mdash; Kliniek Antwerpen</p>
+            <div class="case-num cnt" data-to="21600" data-prefix="&euro;" data-dur="2000">0</div>
+            <p class="case-desc">Extra omzet per jaar door optimalisatie van de behandelingsagenda.</p>
+          </div>
+          <p class="case-ctx">Agenda-analyse en capaciteitsplanning onthulden structurele leegstand die direct omzetbaar was.</p>
+        </div>
+
+        <div class="case-item reveal d4">
+          <div>
+            <p class="case-sector">IT Consultancy &mdash; Nederland</p>
+            <div class="case-num cnt" data-to="18000" data-prefix="&euro;" data-dur="1800">0</div>
+            <p class="case-desc">Extra jaarinkomen via tariefoptimalisatie en acquisitiestructuur.</p>
+          </div>
+          <p class="case-ctx">Marktbenchmarking en positionering legden een structureel undertarief bloot van ruim 22%.</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <div class="div-darker-light" style="background:linear-gradient(to bottom,var(--bg-tertiary),var(--light-bg))"></div>
+
+  <!-- ── Team ───────────────────────────────────────────────── -->
+  <section id="team">
+    <div class="section-wrap">
+
+      <p class="lbl-light reveal">WIE WE ZIJN</p>
+      <h2 class="ttl-light reveal d1">Twee specialisten. Direct bereikbaar.</h2>
+
+      <div class="team-grid">
+
+        <div class="reveal d2">
+          <div class="team-photo"></div>
+          <p class="team-name">Thomas Vanderberg</p>
+          <p class="team-role">Finance &amp; Analyse</p>
+          <p class="team-bio">Tien jaar ervaring in financiële analyse voor KMO's en groeibedrijven. Voormalig controller bij een Antwerpse holdinggroep. Spreekt de taal van de cijfers — en die van de ondernemer.</p>
+          <p class="team-exp">Financiële modellering, cashflow-management, kostenstructuur, KPI-ontwerp</p>
+        </div>
+
+        <div class="reveal d3">
+          <div class="team-photo"></div>
+          <p class="team-name">Lena Claes</p>
+          <p class="team-role">Groei &amp; Strategie</p>
+          <p class="team-bio">Acht jaar in digitale groei voor e-commerce en lokale dienstverleners. Bouwde groeisystemen voor klanten in drie landen. Verbindt data aan actie, niet aan rapporten die in de lade verdwijnen.</p>
+          <p class="team-exp">Groeistrategie, acquisitie, GA4, Looker Studio, benchmarking, conversie-optimalisatie</p>
+        </div>
+
+      </div>
+
+      <p class="team-closing reveal d4">
+        &ldquo;We zijn geen groot bureau. We werken direct met jou &mdash; zonder accountmanager, zonder overhead, zonder bullshit.&rdquo;
+      </p>
+
+    </div>
+  </section>
+
+  <div class="div-light-darkest"></div>
+
+  <!-- ── CTA ────────────────────────────────────────────────── -->
+  <section id="contact">
+    <div class="cta-inner">
+      <h2 class="cta-ttl reveal">
+        Klaar om te ontdekken<br>wat er bij jou te rapen valt?
+      </h2>
+      <p class="cta-sub reveal d1">Een gesprek van 30 minuten kost niets.</p>
+      <a href="mailto:hallo@groeivast.be" class="cta-btn reveal d2">Plan een kennismaking</a>
+      <a href="mailto:hallo@groeivast.be" class="cta-mail reveal d3">hallo@groeivast.be</a>
+    </div>
+  </section>
+
+  <!-- ── Footer ─────────────────────────────────────────────── -->
+  <footer>
+    <div class="foot-inner">
+      <div>
+        <p class="foot-logo">GROEIVAST</p>
+        <p class="foot-tag">Finance &amp; Groei Consultancy &mdash; Antwerpen</p>
+      </div>
+      <div class="foot-links">
+        <a href="#probleem">Probleem</a>
+        <a href="#diensten">Diensten</a>
+        <a href="#aanpak">Aanpak</a>
+        <a href="#resultaten">Resultaten</a>
+        <a href="#team">Team</a>
+        <a href="#contact">Contact</a>
+      </div>
+      <p class="foot-copy">&copy; 2025 GROEIVAST</p>
+    </div>
+  </footer>
+
+  <!-- ── Scripts ────────────────────────────────────────────── -->
+  <script>
+    (function () {
+      'use strict';
+
+      /* ── Nav scroll ──────────────────────────────────── */
+      const nav = document.getElementById('nav');
+      window.addEventListener('scroll', function () {
+        nav.classList.toggle('scrolled', window.scrollY > 40);
+      }, { passive: true });
+
+      /* ── Mobile menu ─────────────────────────────────── */
+      const burger = document.getElementById('burger');
+      const mobileMenu = document.getElementById('mobile-menu');
+      let open = false;
+      burger.addEventListener('click', function () {
+        open = !open;
+        mobileMenu.classList.toggle('open', open);
+      });
+      mobileMenu.querySelectorAll('a').forEach(function (a) {
+        a.addEventListener('click', function () {
+          open = false;
+          mobileMenu.classList.remove('open');
+        });
+      });
+
+      /* ── Cursor spotlight ────────────────────────────── */
+      const spl = document.getElementById('spotlight');
+      const darkSections = new Set(['hero', 'diensten', 'resultaten', 'contact']);
+      document.addEventListener('mousemove', function (e) {
+        spl.style.left = e.clientX + 'px';
+        spl.style.top  = e.clientY + 'px';
+        var el = document.elementFromPoint(e.clientX, e.clientY);
+        var sec = el && el.closest('section');
+        spl.style.opacity = (sec && darkSections.has(sec.id)) ? '1' : '0';
+      }, { passive: true });
+
+      /* ── Underline animation ─────────────────────────── */
+      var ulEl = document.getElementById('ul');
+      setTimeout(function () { ulEl.classList.add('go'); }, 900);
+
+      /* ── Typewriter ──────────────────────────────────── */
+      var words = ['restaurants', 'webshops', 'klinieken', 'startups', 'IT-bedrijven'];
+      var twEl  = document.getElementById('tw');
+      var wi = 0, ci = 0, del = false, delay = 110;
+
+      function tick() {
+        var w = words[wi];
+        if (!del) {
+          ci++;
+          twEl.textContent = w.slice(0, ci);
+          if (ci === w.length) { del = true; delay = 1900; }
+          else { delay = 95; }
+        } else {
+          ci--;
+          twEl.textContent = w.slice(0, ci);
+          if (ci === 0) {
+            del = false;
+            wi = (wi + 1) % words.length;
+            delay = 380;
+          } else { delay = 55; }
+        }
+        setTimeout(tick, delay);
+      }
+      setTimeout(tick, 1400);
+
+      /* ── Scroll reveal ───────────────────────────────── */
+      var revObs = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (e.isIntersecting) {
+            e.target.classList.add('visible');
+            revObs.unobserve(e.target);
+          }
+        });
+      }, { threshold: 0.1, rootMargin: '0px 0px -32px 0px' });
+
+      document.querySelectorAll('.reveal').forEach(function (el) {
+        revObs.observe(el);
+      });
+
+      /* ── Hero immediate reveal ───────────────────────── */
+      var heroEls = document.querySelectorAll('#hero .reveal');
+      heroEls.forEach(function (el, i) {
+        setTimeout(function () { el.classList.add('visible'); }, 80 + i * 100);
+      });
+
+      /* ── Counter animation ───────────────────────────── */
+      function runCounter(el) {
+        var target  = parseInt(el.dataset.to, 10);
+        var prefix  = el.dataset.prefix || '';
+        var dur     = parseInt(el.dataset.dur, 10) || 2000;
+        var start   = performance.now();
+
+        function frame(now) {
+          var p = Math.min((now - start) / dur, 1);
+          var eased = 1 - Math.pow(1 - p, 3);
+          var val = Math.round(eased * target);
+          el.innerHTML = prefix + (val >= 1000 ? val.toLocaleString('nl-BE') : val);
+          if (p < 1) requestAnimationFrame(frame);
+        }
+        requestAnimationFrame(frame);
+      }
+
+      var cntObs = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (e.isIntersecting) {
+            runCounter(e.target);
+            cntObs.unobserve(e.target);
+          }
+        });
+      }, { threshold: 0.35 });
+
+      document.querySelectorAll('.cnt').forEach(function (el) {
+        cntObs.observe(el);
+      });
+
+      /* ── Timeline dots ───────────────────────────────── */
+      var dotObs = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (e.isIntersecting) {
+            e.target.classList.add('on');
+            dotObs.unobserve(e.target);
+          }
+        });
+      }, { threshold: 0.9 });
+
+      document.querySelectorAll('[data-dot]').forEach(function (d) {
+        dotObs.observe(d);
+      });
+
+    }());
+  </script>
+</body>
+</html>
